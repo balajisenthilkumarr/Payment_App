@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 
 function App() {
-  // State to hold user inputs
   const [amount, setAmount] = useState('');
   const [userId, setUserId] = useState('');
 
-  // Dynamically load Razorpay checkout script
+  // Dynamically load Razorpay script
   useEffect(() => {
     const script = document.createElement('script');
     script.src = 'https://checkout.razorpay.com/v1/checkout.js';
@@ -16,7 +15,6 @@ function App() {
     document.body.appendChild(script);
 
     return () => {
-      // Clean up the script when component unmounts
       document.body.removeChild(script);
     };
   }, []);
@@ -29,30 +27,34 @@ function App() {
       return;
     }
 
-    const response = await fetch('http://localhost:3000/api/payment/create-order', {
+    const response = await fetch('http://localhost:8000/api/payment/create-order', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ amount:parseInt(amount), userId:trimmedUserId }), // Pass dynamic data
+      body: JSON.stringify({ userId: trimmedUserId,amount: parseInt(amount) }),
     });
-
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
     const data = await response.json();
-    const { orderId, orderAmount } = data;
-    console.log("data",orderId);
+    console.log("data orders",data);
+    const { id: orderId, amount: orderAmount } = data; // Extract orderId and orderAmount from the response
+    console.log("Order created:", orderId, orderAmount);
 
     // Options for Razorpay checkout
     const options = {
-      key: "rzp_test_CzYecVDNqXcUd6",
+      key: "rzp_test_CzYecVDNqXcUd6", // Replace with your Razorpay key
       amount: orderAmount,
       currency: "INR",
       order_id: orderId,
       handler: function (response) {
         const paymentId = response.razorpay_payment_id;
         const order_Id = response.razorpay_order_id;
-        console.log(order_Id,"sdajkfkjsdafhsdfsd",paymentId, orderId)
+        console.log('Payment Response:', paymentId, order_Id);
+
         // Call your backend to capture the payment
-        fetch('http://localhost:3000/api/payment/capture-payment', {
+        fetch('http://localhost:8000/api/payment/capture-payment', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -60,18 +62,18 @@ function App() {
           body: JSON.stringify({
             payment_id: paymentId,
             order_id: orderId,
-            amount: orderAmount
+            amount: orderAmount,
           }),
         })
-        .then(response => response.json())
-        .then(data => {
-          console.log('Payment captured:', data);
-          alert("Payment successful!");
-        })
-        .catch(error => {
-          console.error('Error capturing payment:', error);
-          alert("Payment capture failed!");
-        });
+          .then(response => response.json())
+          .then(data => {
+            console.log('Payment captured:', data);
+            alert("Payment successful!");
+          })
+          .catch(error => {
+            console.error('Error capturing payment:', error);
+            alert("Payment capture failed!");
+          });
       },
       prefill: {
         name: "John Doe",
@@ -95,7 +97,7 @@ function App() {
         <input
           type="text"
           value={userId}
-          onChange={(e) => setUserId(e.target.value)}  // Update userId state
+          onChange={(e) => setUserId(e.target.value)}
         />
       </div>
 
@@ -104,7 +106,7 @@ function App() {
         <input
           type="number"
           value={amount}
-          onChange={(e) => setAmount(e.target.value)}  // Update amount state
+          onChange={(e) => setAmount(e.target.value)}
         />
       </div>
 

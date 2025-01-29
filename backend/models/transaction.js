@@ -1,10 +1,10 @@
 import mongoose from 'mongoose';
 
 const transactionSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  userId:  {type: String, required: true},
   amount: { type: String, required: true },
   status: { type: String, enum: ['pending', 'completed', 'failed'], required: true },
-  razorpayPaymentId: { type: String },
+  razorpayOrderId: { type: String },
   transactionId: { type: String },
 });
 

@@ -17,7 +17,7 @@ export const createPaymentOrder = async (amount, userId) => {
     const options = {
       amount:amount,  // Razorpay expects the amount in paise (1 INR = 100 paise)
       currency: 'INR',
-      receipt:'1234',
+      receipt:'',
       notes: {
         description: 'Payment for Order',
       },
@@ -27,13 +27,13 @@ export const createPaymentOrder = async (amount, userId) => {
 
     // Create an order with Razorpay API
     const order = await razorpay.orders.create(options);
-console.log(order,"order")
+//console.log(order,"order")
     // Save the transaction details in the database
     const transaction = new Transaction({
       userId:userId,
       amount,
       status: 'pending',  // Initially, the payment status is 'pending'
-      razorpayPaymentId: order.id,
+      razorpayOrderId: order.id,
       transactionId: order.receipt,
     });
 
@@ -42,27 +42,49 @@ console.log(order,"order")
     return order;  // Return the Razorpay order details for the controller
   } catch (error) {
     console.error(error);
-    throw new Error('Error creating payment order');
+    throw new Error('Error creating payment order',error);
   }
 };
 
 export const capturePayment = async (paymentId, orderId, amount) => {
-    try {
-      
-      const capture = await razorpay.payments.capture(paymentId, orderId, amount);
-      console.log("capturing",capture);
+  try {
+    // Fetch the payment details from Razorpay to check if it's already captured
+    const payment = await razorpay.payments.fetch(paymentId);
+    console.log(payment.status);
+
+    if (payment.status === 'captured') {
+      console.log('Payment already captured');
+      // If the payment is already captured, update the database status to 'completed'
       const transaction = await Transaction.findOneAndUpdate(
-        { razorpayPaymentId: paymentId },
+        { razorpayOrderId: orderId },
         { status: 'completed' },
         { new: true }
       );
-  console.log("transaction",transaction)
-      return capture;  // Return the capture details to the controller
-    } catch (error) {
-      console.error(error);
-      throw new Error('Error capturing payment');
+      console.log("Transaction already captured:", transaction);
+      return payment; // Return the payment data as is
     }
-  };
+    const trans = await Transaction.findOne({ razorpayPaymentId: paymentId });
+   console.log("db",trans);
+
+    // If payment is not captured, proceed with the capture
+    const capture = await razorpay.payments.capture(paymentId, amount);  // Correctly pass only paymentId and amount
+    console.log("capturing", capture);
+
+    // Update the transaction status to 'completed' after successful capture
+    const transaction = await Transaction.findOneAndUpdate(
+      { razorpayOrderId: orderId  },
+      { status: 'completed' },
+      { new: true }
+    );
+    console.log("transaction", transaction);
+    return capture;  // Return the capture details to the controller
+  } catch (error) {
+    console.error(error);
+    throw new Error('Error capturing payment');
+  }
+};
+
+
 
   
 

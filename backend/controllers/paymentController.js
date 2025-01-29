@@ -3,16 +3,24 @@ import {
   capturePayment,
 } from "../services/paymentServices.js";
 import { createUserAccount } from "../services/userServices.js";
+import mongoose from "mongoose";
 
 // Create a payment order
 export const createPaymentOrderController = async (req, res) => {
-  const { amount, userId } = req.body;
+  const {  userId,amount} = req.body;
   console.log( req.body," req.body");
-  
   try {
     const order = await createPaymentOrder(amount, userId);
+    console.log(order);
+    if (order && order.id && order.amount) {
+      res.status(200).json({
+        id: order.id,
+        amount: order.amount,
+      });
+    } else {
+      res.status(400).json({ message: 'Invalid order data received' });
+    }
 
-    res.status(200).json(order); // Send Razorpay order to frontend
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Error creating payment order" });
