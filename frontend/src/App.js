@@ -1,8 +1,16 @@
 import React, { useState, useEffect } from 'react';
+import Navbar from './components/Navbar';
 
 function App() {
   const [amount, setAmount] = useState('');
-  const [userId, setUserId] = useState('');
+  const [userId, setUserId] = useState({
+    name:"balaji",
+    email:"balajivijjay3447#@gmail.com",
+    profileIcon:"https://www.clipartkey.com/mpngs/m/197-1971414_avatars-clipart-generic-user-user-profile-icon.png"
+  });
+  const [isConfirmed, setIsConfirmed] = useState(false);
+  const razorpayKey = process.env.REACT_APP_RAZORPAY_KEY;
+  const apiUrl = process.env.REACT_APP_BACKEND_API_URL;
 
   // Dynamically load Razorpay script
   useEffect(() => {
@@ -26,8 +34,7 @@ function App() {
       alert('Please provide both user ID and amount');
       return;
     }
-
-    const response = await fetch('http://localhost:8000/api/payment/create-order', {
+    const response = await fetch(`${apiUrl}/payment/create-order`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -44,7 +51,7 @@ function App() {
 
     // Options for Razorpay checkout
     const options = {
-      key: "rzp_test_CzYecVDNqXcUd6", // Replace with your Razorpay key
+      key: razorpayKey, // Replace with your Razorpay key
       amount: orderAmount,
       currency: "INR",
       order_id: orderId,
@@ -54,7 +61,7 @@ function App() {
         console.log('Payment Response:', paymentId, order_Id);
 
         // Call your backend to capture the payment
-        fetch('http://localhost:8000/api/payment/capture-payment', {
+        fetch(`${apiUrl}/payment/capture-payment`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -90,28 +97,64 @@ function App() {
     razorpay.open();
   };
 
+  
   return (
-    <div>
-      <div>
-        <label>User ID: </label>
-        <input
-          type="text"
-          value={userId}
-          onChange={(e) => setUserId(e.target.value)}
-        />
-      </div>
+    <>
+      <Navbar userid={userId} />
+      <div className="flex justify-start p-8">
+        {/* Left-aligned Payment Form */}
+          <div className="max-w-2xl p-10 bg-[#F7FAFC]shadow-lg rounded-lg">
+            <h1 className="text-4xl font-bold text-center text-indigo-600 mb-8">Payment Portal</h1>
+            <div className="space-y-8">
+              {/* User ID Input */}
+            <div>
+              <label htmlFor="userId" className="block text-xl font-medium text-gray-700">User ID</label>
+              <input
+                type="text"
+                id="userId"
+                value={userId}
+                onChange={(e) => setUserId(e.target.value)}
+                className="w-full p-4 mt-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="Enter User ID" />
+            </div>
 
-      <div>
-        <label>Amount: </label>
-        <input
-          type="number"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-        />
-      </div>
+            {/* Amount Input */}
+            <div>
+              <label htmlFor="amount" className="block text-xl font-medium text-gray-700">Amount</label>
+              <input
+                type="number"
+                id="amount"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="w-full p-4 mt-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="Enter Amount" />
+            </div>
 
-      <button onClick={initiatePayment}>Pay Now</button>
-    </div>
+            {/* Confirm Payment Checkbox */}
+            <div className="flex items-center space-x-3">
+              <input
+                type="checkbox"
+                id="confirmPayment"
+                checked={isConfirmed}
+                onChange={() => setIsConfirmed(!isConfirmed)}
+                className="h-6 w-6 border-gray-300 rounded focus:ring-2 focus:ring-indigo-500" />
+              <label htmlFor="confirmPayment" className="text-xl">I confirm this payment</label>
+            </div>
+
+            {/* Pay Now Button */}
+            <div className="mt-8">
+              <button
+                onClick={initiatePayment}
+                disabled={!isConfirmed || !userId || !amount}
+                className="w-full p-4 text-xl text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-400"
+              >
+                Pay Now
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }
 
