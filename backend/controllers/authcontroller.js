@@ -5,6 +5,7 @@ import { createOrUpdateUser, getUserProfile } from '../services/userServices.js'
 export const login = async (req, res) => {
   try {
     const { token } = req.body;
+    console.log(token);
     
     // Verify Google token
     const decoded = jwt.decode(token);

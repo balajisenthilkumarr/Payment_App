@@ -6,5 +6,6 @@
 
 export const CONFIG = {
   RAZORPAY_KEY: process.env.REACT_APP_RAZORPAY_KEY,
-  API_URL: 'http://localhost:8000/api'  // Hardcode for now to fix the issue
+  API_URL: 'http://localhost:5000/api'
+  // /api'  // Hardcode for now to fix the issue
 };

@@ -1,18 +1,21 @@
-import React, { createContext, useContext, useState } from 'react';
+// src/context/AuthContext.jsx
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { CONFIG } from '../config/overrides';
 import toast from 'react-hot-toast';
 import Navbar from '../components/Navbar';
-import Login from '../components/Login';
-import Dashboard from '../components/Dashboard';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
+  const navigate = useNavigate();
+  
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [transactions, setTransactions] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
+  // Handle login logic
   const login = async (credential) => {
     const loadingToast = toast.loading('Signing in...');
     try {
@@ -24,19 +27,18 @@ export const AuthProvider = ({ children }) => {
         },
         body: JSON.stringify({ token: credential }),
       });
-      
+
       if (!response.ok) {
         throw new Error('Login failed');
       }
-      
+
       const data = await response.json();
+      console.log(data);
       setUser(data.user);
       localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem('token', data.token);
       toast.success('Welcome back!', { id: loadingToast });
-      
-      // Automatically fetch profile after login
-      await fetchProfile();
-      await fetchTransactions();
+      navigate('/dashboard'); // Redirect to dashboard after successful login
     } catch (error) {
       console.error('Login error:', error);
       toast.error('Login failed. Please try again.', { id: loadingToast });
@@ -46,10 +48,21 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Handle logout logic
+  const logout = () => {
+    setUser(null);
+    setProfile(null);
+    setTransactions([]);
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    toast.success('Logged out successfully');
+    navigate('/login'); // Redirect to login page after logout
+  };
+
+  // Fetch user profile
   const fetchProfile = async () => {
     try {
-      const response = await fetch(`${CONFIG.API_URL}/user/profile`, {
-        method: 'GET',
+      const response = await fetch(`${CONFIG.API_URL}/auth/profile`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json',
@@ -70,10 +83,10 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Fetch transactions
   const fetchTransactions = async () => {
     try {
       const response = await fetch(`${CONFIG.API_URL}/transactions`, {
-        method: 'GET',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json',
@@ -94,51 +107,53 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
-    toast.promise(
-      new Promise((resolve) => {
-        setUser(null);
-        setProfile(null);
-        setTransactions([]);
-        localStorage.removeItem('user');
-        localStorage.removeItem('token');
-        setTimeout(resolve, 500); // Small delay for better UX
-      }),
-      {
-        loading: 'Signing out...',
-        success: 'See you again!',
-        error: 'Logout failed'
+  // Initialize authentication state on app load
+  useEffect(() => {
+    const initializeAuth = async () => {
+      const storedUser = localStorage.getItem('user');
+      const storedToken = localStorage.getItem('token');
+
+      if (storedUser && storedToken) {
+        setUser(JSON.parse(storedUser));
+        try {
+          //await fetchProfile();
+          //await fetchTransactions();
+        } catch (error) {
+          console.error('Error initializing auth:', error);
+          logout(); // Log out if there's an issue fetching data
+        }
+      } else {
+        navigate('/login'); // Redirect to login if no user or token found
       }
-    );
+      setLoading(false);
+    };
+
+    initializeAuth();
+  }, [navigate]); // Dependency on navigate to prevent rerender issues
+
+  const value = {
+    user,
+    profile,
+    transactions,
+    loading,
+    login,
+    logout,
+    fetchProfile,
+    fetchTransactions,
   };
 
-  React.useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    const storedToken = localStorage.getItem('token');
-    
-    if (storedUser && storedToken) {
-      setUser(JSON.parse(storedUser));
-      // Optionally fetch profile and transactions on app reload
-      fetchProfile();
-      fetchTransactions();
-    }
-  }, []);
-
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      profile, 
-      transactions, 
-      loading, 
-      login, 
-      logout, 
-      fetchProfile, 
-      fetchTransactions 
-    }}>
-        <Navbar /> 
-        {!loading ? <Dashboard /> : <Login />}
+    <AuthContext.Provider value={value}>
+      {user ? <Navbar /> :"NULL"} {/* Show Navbar if user is logged in */}
+      {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};

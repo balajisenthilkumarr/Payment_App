@@ -1,6 +1,7 @@
 import Razorpay from 'razorpay';
 import Transaction from '../models/transaction.js';
 import dotenv from 'dotenv';
+import User from '../models/User.js';
 
 dotenv.config();
 
@@ -15,7 +16,7 @@ export const createPaymentOrder = async (amount, userId) => {
   try {
  
     const options = {
-      amount:amount,  // Razorpay expects the amount in paise (1 INR = 100 paise)
+      amount:amount*100,  // Razorpay expects the amount in paise (1 INR = 100 paise)
       currency: 'INR',
       receipt:'',
       notes: {
@@ -83,6 +84,23 @@ export const capturePayment = async (paymentId, orderId, amount) => {
     throw new Error('Error capturing payment');
   }
 };
+
+export const transactiondata= async(userId)=>{
+
+      
+  try{
+    const transactions = await Transaction.find({ userId}).sort({ _id: -1 })
+console.log(transactions);
+    return transactions;
+  }
+  catch(error)
+  {
+    console.error(error);
+    throw new Error("Error while transaction");
+  }
+    
+
+}
 
 
 

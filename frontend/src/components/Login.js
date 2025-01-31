@@ -1,20 +1,24 @@
 // src/components/Login.js
 import React from 'react';
 import { GoogleLogin } from '@react-oauth/google';
-import { useNavigate } from 'react-router-dom';
 import { toast, Toaster } from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
-  const { login } = useAuth();
+    const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSuccess = async (credentialResponse) => {
-    console.log("token",credentialResponse);
+   
+    console.log("ten",credentialResponse);
     try {
+     
       await login(credentialResponse.credential);
-      toast.success('Login successful!');
-      navigate('/dashboard');
+
+
+
+      // navigate('/dashboard');
     } catch (error) {
       console.error('Login error:', error);
       toast.error('Login failed. Please try again.');
@@ -25,9 +29,9 @@ const Login = () => {
     toast.error('Login failed. Please try again.');
   };
 
-  const handleLegalClick = (type) => {
+/*  const handleLegalClick = (type) => {
     toast.info(`${type} page will be available soon.`);
-  };
+  };*/
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-white flex flex-col justify-center">
@@ -113,14 +117,14 @@ const Login = () => {
       <div className="mt-8 text-center text-sm text-gray-600">
         By continuing, you agree to our{' '}
         <button
-          onClick={() => handleLegalClick('Terms of Service')}
+          //onClick={() => handleLegalClick('Terms of Service')}
           className="font-medium text-indigo-600 hover:text-indigo-500 underline"
         >
           Terms of Service
         </button>{' '}
         and{' '}
         <button
-          onClick={() => handleLegalClick('Privacy Policy')}
+          //onClick={() => handleLegalClick('Privacy Policy')}
           className="font-medium text-indigo-600 hover:text-indigo-500 underline"
         >
           Privacy Policy

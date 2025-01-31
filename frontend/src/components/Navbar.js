@@ -1,9 +1,13 @@
 import React from 'react';
 import { Bell } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { Link } from 'react-router-dom';
 
 const Navbar = () => {
-  const { user, profile, logout } = useAuth();
+  const { user, profile,logout} = useAuth();
+  const handleLogout = () => {
+    logout(); 
+  };
 
   return (
     <div className="bg-white shadow-sm">
@@ -43,11 +47,9 @@ const Navbar = () => {
                 </p>
               </div>
               
+              
               {/* Logout Button */}
-              <button 
-                onClick={logout}
-                className="ml-2 text-red-500 hover:text-red-700 text-sm"
-              >
+              <button to="/login" className="ml-2 text-red-500 hover:text-red-700 text-sm" onClick={handleLogout}>
                 Logout
               </button>
             </div>
