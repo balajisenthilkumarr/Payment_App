@@ -2,13 +2,10 @@ import {
   createPaymentOrder,
   capturePayment,
 } from "../services/paymentServices.js";
-import { createUserAccount } from "../services/userServices.js";
-import mongoose from "mongoose";
 
-// Create a payment order
 export const createPaymentOrderController = async (req, res) => {
-  const {  userId,amount} = req.body;
-  console.log( req.body," req.body");
+  const { userId, amount } = req.body;
+  console.log(req.body, " req.body");
   try {
     const order = await createPaymentOrder(amount, userId);
     console.log(order);
@@ -18,9 +15,8 @@ export const createPaymentOrderController = async (req, res) => {
         amount: order.amount,
       });
     } else {
-      res.status(400).json({ message: 'Invalid order data received' });
+      res.status(400).json({ message: "Invalid order data received" });
     }
-
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Error creating payment order" });
@@ -38,18 +34,5 @@ export const capturePaymentController = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Error capturing payment" });
-  }
-};
-// Create a user account
-export const createUserAccountController = async (req, res) => {
-  const { oauthId, email, name } = req.body;
-  console.log(req.body);
-
-  try {
-    const user = await createUserAccount(oauthId, email, name);
-    res.status(201).json({ message: "User account created successfully", user });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error creating user account" });
   }
 };
