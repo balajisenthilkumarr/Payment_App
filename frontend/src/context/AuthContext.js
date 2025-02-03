@@ -83,30 +83,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Fetch transactions
-  const fetchTransactions = async () => {
-    try {
-      const response = await fetch(`${CONFIG.API_URL}/transactions`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch transactions');
-      }
-
-      const transactionsData = await response.json();
-      setTransactions(transactionsData);
-      return transactionsData;
-    } catch (error) {
-      console.error('Transactions fetch error:', error);
-      toast.error('Could not fetch transactions');
-      throw error;
-    }
-  };
-
   // Initialize authentication state on app load
   useEffect(() => {
     const initializeAuth = async () => {
@@ -139,7 +115,6 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     fetchProfile,
-    fetchTransactions,
   };
 
   return (

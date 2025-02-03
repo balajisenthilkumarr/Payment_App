@@ -85,11 +85,11 @@ export const capturePayment = async (paymentId, orderId, amount) => {
   }
 };
 
-export const transactiondata= async(userId)=>{
-
-      
+export const transactiondata= async({userId})=>{
+ console.log("bghhg",userId);
   try{
-    const transactions = await Transaction.find({ userId}).sort({ _id: -1 })
+    const transactions = await Transaction.find({userId:userId});
+
 console.log(transactions);
     return transactions;
   }

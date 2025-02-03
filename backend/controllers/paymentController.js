@@ -45,7 +45,7 @@ export const getTransactionsController = async (req, res) => {
   console.log("user data from",userId);
 
   try {
-      const transactions = await transactiondata({ userId:userId });
+      const transactions = await transactiondata({userId });
           
       res.status(200).json(transactions);
   } catch (error) {

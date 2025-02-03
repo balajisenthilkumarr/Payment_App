@@ -1,9 +1,9 @@
 import { CONFIG } from "../config/overrides";
-console.log(CONFIG.API_URL,"ssssssssssss");
+//console.log(CONFIG.API_URL,"ssssssssssss");
 
   export const createOrder = async (userId, amount) => {
     console.log("Creating order for:", userId, amount);
-    const response = await fetch(`http://localhost:5000/api/payment/create-order`, {
+    const response = await fetch(`${CONFIG.API_URL}/payment/create-order`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -19,7 +19,7 @@ console.log(CONFIG.API_URL,"ssssssssssss");
   };
   
   export const capturePayment = async (paymentId, orderId, amount) => {
-    const response = await fetch(`http://localhost:5000/api/payment/capture-payment`, {
+    const response = await fetch(`${CONFIG.API_URL}/payment/capture-payment`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -35,5 +35,17 @@ console.log(CONFIG.API_URL,"ssssssssssss");
       throw new Error('Payment capture failed');
     }
   
+    return response.json();
+  };
+  export const getTransactionDetails = async (userId) => {
+    const response = await fetch(`${CONFIG.API_URL}/payment/get-Transaction/${userId}`, {
+      method:'GET',
+      headers:{
+        'Content-Type': 'application/json',
+      },
+    });
+        if(!response.ok){
+          throw new Error("Get transaction details failed");
+        }
     return response.json();
   };
