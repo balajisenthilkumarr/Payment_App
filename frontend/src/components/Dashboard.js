@@ -2,23 +2,23 @@
 import React, { useState, useEffect } from "react";
 import { Toaster, toast } from "react-hot-toast";
 import { Send, CreditCard, History } from "lucide-react";
-
-import {
-  createOrder,
-  capturePayment,
-  getTransactionDetails,
-} from "../services/paymentService";
+import { CheckCircleIcon, XCircleIcon, ClockIcon } from "@heroicons/react/20/solid";
+import { createOrder, capturePayment } from "../services/paymentService";
 import { useAuth } from "../context/AuthContext";
+import { useSocket } from '../context/SocketContext';
 
 const Dashboard = () => {
-  const { user, transactions } = useAuth();
+  const { user, handleTransaction,transactions} = useAuth();
+  const socket=useSocket();
   const [amount, setAmount] = useState("");
-  const [userId, setUserId] = useState("");
+  const [senterId, setsenterId] = useState("");
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [activeTab, setActiveTab] = useState("send");
   const [isLoading, setIsLoading] = useState(false);
+  
 
   useEffect(() => {
+    socket.emit("sendMessage", "testing");
     const script = document.createElement("script");
     script.src = "https://checkout.razorpay.com/v1/checkout.js";
     script.async = true;
@@ -27,7 +27,7 @@ const Dashboard = () => {
   }, []);
 
   const handlePayment = async () => {
-    if (!amount || !userId) {
+    if (!amount || !senterId) {
       toast.error("Please provide both user ID and amount");
       return;
     }
@@ -36,11 +36,13 @@ const Dashboard = () => {
       toast.error("Please confirm the payment details");
       return;
     }
+    socket.emit("payment_activated","ok");
 
     const paymentPromise = async () => {
       setIsLoading(true);
       try {
-        const data = await createOrder(userId.trim(), amount);
+        console.log("ded", senterId);
+        const data = await createOrder(user.email,senterId.trim(), amount);
         console.log("Order created:", data);
 
         const { id: orderId, amount: orderAmount } = data;
@@ -61,7 +63,7 @@ const Dashboard = () => {
                 console.log("Payment captured:", result);
 
                 setAmount("");
-                setUserId("");
+                setsenterId("");
                 setIsConfirmed(false);
                 resolve(result);
               } catch (error) {
@@ -100,10 +102,6 @@ const Dashboard = () => {
         `Payment failed: ${err.message || "Something went wrong"}`,
     });
   };
-  const handleTransaction = async () => {
-    const Transactiondata = await getTransactionDetails(userId);
-    
-  };
 
   const handleAmountChange = (e) => {
     const value = e.target.value;
@@ -127,10 +125,10 @@ const Dashboard = () => {
         </label>
         <input
           type="text"
-          value={userId}
-          onChange={(e) => setUserId(e.target.value)}
+          value={senterId}
+          onChange={(e) => setsenterId(e.target.value)}
           onBlur={() => {
-            if (userId && userId.length < 3) {
+            if (senterId && senterId.length < 3) {
               toast.error("User ID must be at least 3 characters");
             }
           }}
@@ -163,7 +161,7 @@ const Dashboard = () => {
       </div>
       <button
         onClick={handlePayment}
-        disabled={!isConfirmed || !amount || !userId || isLoading}
+        disabled={!isConfirmed || !amount || !senterId || isLoading}
         className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 disabled:bg-gray-400"
       >
         {isLoading ? "Processing..." : "Send Money"}
@@ -178,20 +176,72 @@ const Dashboard = () => {
     </div>
   );
 
-  const TransactionsTab = () => (
-    <div className="bg-white p-6 rounded-lg shadow">
-      <h2 className="text-xl font-semibold mb-4">Recent Transactions</h2>
-      <div className="space-y-4">
-        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-          <div className="flex items-center space-x-4">
-            <span className="text-gray-500">To: John Doe</span>
-            <span className="text-red-600">-₹500</span>
-          </div>
-          <span className="text-sm text-gray-500">2024-01-30</span>
-        </div>
+  const TransactionsTab = ({ transactions }) => (
+    <div className="bg-white p-6 rounded-lg shadow-lg">
+      <h2 className="text-2xl font-semibold mb-6 text-gray-800">Recent Transactions</h2>
+      <div className="space-y-6">
+        {transactions && transactions.length > 0 ? (
+          transactions.map((transaction) => (
+            <div
+              key={transaction._id}
+              className="bg-gray-50 hover:bg-gray-100 transition duration-200 ease-in-out p-6 rounded-xl shadow-md flex items-center justify-between space-x-4"
+            >
+              <div className="flex items-center space-x-4">
+                {/* Transaction icon */}
+                <div className="h-12 w-12 rounded-full bg-indigo-500 flex items-center justify-center text-white">
+                  {transaction.status === "completed" ? (
+                    <CheckCircleIcon className="h-6 w-6" />
+                  ) : transaction.status === "pending" ? (
+                    <ClockIcon className="h-6 w-6" />
+                  ) : (
+                    <XCircleIcon className="h-6 w-6" />
+                  )}
+                </div>
+                <div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm font-medium text-gray-600">From:</span>
+                    <span className="text-sm text-gray-800 font-semibold">
+                      {transaction.Receiverid}
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-2 mt-1">
+                    <span className="text-sm font-medium text-gray-600">To:</span>
+                    <span className="text-sm text-gray-800 font-semibold">
+                      {transaction.Senderid}
+                    </span>
+                  </div>
+                </div>
+              </div>
+  
+              <div className="flex flex-col items-end space-y-2">
+                <div className="text-xl font-semibold text-red-600">
+                  -₹{transaction.amount}
+                </div>
+                <div className="text-sm text-gray-500">
+                  {new Date(transaction.createdAt).toLocaleDateString()}
+                </div>
+                <div
+                  className={`text-xs font-semibold px-3 py-1 rounded-full ${
+                    transaction.status === "completed"
+                      ? "bg-green-200 text-green-600"
+                      : transaction.status === "pending"
+                      ? "bg-yellow-200 text-yellow-600"
+                      : "bg-red-200 text-red-600"
+                  }`}
+                >
+                  {transaction.status}
+                </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="text-center text-gray-600">No transactions available</div>
+        )}
       </div>
     </div>
   );
+  
+  
 
   const renderActiveTab = () => {
     switch (activeTab) {
@@ -200,7 +250,7 @@ const Dashboard = () => {
       case "request":
         return <RequestMoneyTab />;
       case "transactions":
-        return <TransactionsTab />;
+        return <TransactionsTab  transactions={transactions}/>;
       default:
         return <SendMoneyTab />;
     }
@@ -252,7 +302,7 @@ const Dashboard = () => {
             <span>Request Money</span>
           </button>
           <button
-            onClick={() => setActiveTab("transactions")}
+            onClick={() => {setActiveTab("transactions");handleTransaction()}}
             className={`flex items-center space-x-2 px-4 py-2 ${
               activeTab === "transactions"
                 ? "text-indigo-600 border-b-2 border-indigo-600"

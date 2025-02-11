@@ -5,8 +5,8 @@ import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
-
 const App = () => {
+
   return (
  
       <Toaster

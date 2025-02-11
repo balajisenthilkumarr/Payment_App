@@ -1,14 +1,15 @@
+
 import { CONFIG } from "../config/overrides";
 //console.log(CONFIG.API_URL,"ssssssssssss");
 
-  export const createOrder = async (userId, amount) => {
-    console.log("Creating order for:", userId, amount);
+  export const createOrder = async (Receiverid,SenderId, amount) => {
+    console.log("Creating order for:",Receiverid, SenderId, amount);
     const response = await fetch(`${CONFIG.API_URL}/payment/create-order`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ userId, amount: parseInt(amount) }),
+      body: JSON.stringify({ SenderId, amount: parseInt(amount) ,Receiverid}),
     });
   
     if (!response.ok) {
@@ -37,15 +38,19 @@ import { CONFIG } from "../config/overrides";
   
     return response.json();
   };
-  export const getTransactionDetails = async (userId) => {
-    const response = await fetch(`${CONFIG.API_URL}/payment/get-Transaction/${userId}`, {
-      method:'GET',
-      headers:{
-        'Content-Type': 'application/json',
-      },
-    });
-        if(!response.ok){
-          throw new Error("Get transaction details failed");
-        }
-    return response.json();
+  export const getTransactionDetails=  async (useremail)=>
+  {
+    console.log(" data for emaiil",useremail)
+     const response=await fetch(`${CONFIG.API_URL}/payment/get-Transaction/${useremail}`,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      if(!response.ok)
+      {
+        throw new Error("get transaction is failed");
+      }
+      
+      return response.json();
   };

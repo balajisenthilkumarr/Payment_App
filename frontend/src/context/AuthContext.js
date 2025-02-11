@@ -5,6 +5,8 @@ import { CONFIG } from '../config/overrides';
 import toast from 'react-hot-toast';
 import Navbar from '../components/Navbar';
 
+
+import { getTransactionDetails } from '../services/paymentService';
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -14,6 +16,7 @@ export const AuthProvider = ({ children }) => {
   const [profile, setProfile] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
+  
 
   // Handle login logic
   const login = async (credential) => {
@@ -38,6 +41,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('user', JSON.stringify(data.user));
       localStorage.setItem('token', data.token);
       toast.success('Welcome back!', { id: loadingToast });
+     
       navigate('/dashboard'); // Redirect to dashboard after successful login
     } catch (error) {
       console.error('Login error:', error);
@@ -47,6 +51,7 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     }
   };
+
 
   // Handle logout logic
   const logout = () => {
@@ -58,6 +63,22 @@ export const AuthProvider = ({ children }) => {
     toast.success('Logged out successfully');
     navigate('/login'); // Redirect to login page after logout
   };
+
+
+  const handleTransaction = async () => {
+    if (!user?.email) {
+      console.error("User email not found.");
+      return;
+    }
+    const transactionData = await getTransactionDetails(user.email);
+    console.log("TRANSACATIONDATA",transactionData);
+    setTransactions(transactionData);
+   
+  };
+
+  
+
+
 
   // Fetch user profile
   const fetchProfile = async () => {
@@ -83,6 +104,10 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+
+
+  
+
   // Initialize authentication state on app load
   useEffect(() => {
     const initializeAuth = async () => {
@@ -105,12 +130,13 @@ export const AuthProvider = ({ children }) => {
     };
 
     initializeAuth();
-  }, [navigate]); // Dependency on navigate to prevent rerender issues
+  }, [navigate]); // Dependency on navigate and logout to prevent rerender issues
 
   const value = {
     user,
     profile,
     transactions,
+    handleTransaction,
     loading,
     login,
     logout,

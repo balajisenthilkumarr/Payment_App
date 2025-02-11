@@ -12,7 +12,7 @@ const razorpay = new Razorpay({
 });
 
 // Service function to create a payment order
-export const createPaymentOrder = async (amount, userId) => {
+export const createPaymentOrder = async (amount, Receiverid,Senderid) => {
   try {
  
     const options = {
@@ -24,14 +24,15 @@ export const createPaymentOrder = async (amount, userId) => {
       },
     };
 
-    
+    //console.log("sendnddndd",Receiverid);
 
     // Create an order with Razorpay API
     const order = await razorpay.orders.create(options);
 //console.log(order,"order")
     // Save the transaction details in the database
     const transaction = new Transaction({
-      userId:userId,
+      Receiverid:Receiverid,
+      Senderid:Senderid,
       amount,
       status: 'pending',  // Initially, the payment status is 'pending'
       razorpayOrderId: order.id,
@@ -85,10 +86,10 @@ export const capturePayment = async (paymentId, orderId, amount) => {
   }
 };
 
-export const transactiondata= async({userId})=>{
- console.log("bghhg",userId);
+export const transactiondata= async({useremail})=>{
+ console.log("bghhg",useremail);
   try{
-    const transactions = await Transaction.find({userId:userId});
+    const transactions = await Transaction.find({ Receiverid:useremail});
 
 console.log(transactions);
     return transactions;
