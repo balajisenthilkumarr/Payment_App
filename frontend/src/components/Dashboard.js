@@ -6,6 +6,7 @@ import { CheckCircleIcon, XCircleIcon, ClockIcon } from "@heroicons/react/20/sol
 import { createOrder, capturePayment } from "../services/paymentService";
 import { useAuth } from "../context/AuthContext";
 import { useSocket } from '../context/SocketContext';
+import ToastContainer from "../toast/ToastContainer";
 
 const Dashboard = () => {
   const { user, handleTransaction,transactions} = useAuth();
@@ -36,7 +37,7 @@ const Dashboard = () => {
       toast.error("Please confirm the payment details");
       return;
     }
-    socket.emit("payment_activated","ok");
+    socket.emit("payment activated","ok");
 
     const paymentPromise = async () => {
       setIsLoading(true);
@@ -315,6 +316,8 @@ const Dashboard = () => {
         </div>
 
         {renderActiveTab()}
+
+        <ToastContainer socket={socket} />
       </main>
     </>
   );

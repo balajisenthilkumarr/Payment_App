@@ -1,0 +1,76 @@
+/* Toast container styling */
+.toast-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px; /* Increased gap for better spacing */
+  z-index: 1000;
+  max-width: 350px; /* Ensure max width for toasts */
+  padding: 10px;
+}
+
+/* Toast base styling */
+.toast {
+  min-width: 250px;
+  padding: 15px;
+  border-radius: 8px; /* Rounded corners */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Light shadow */
+  animation: slideIn 0.5s ease-out; /* Increased animation duration */
+  opacity: 1;
+  transition: opacity 0.3s ease-in-out;
+}
+
+/* Toast types */
+.toast-success { background-color: #4CAF50; color: white; }
+.toast-error { background-color: #f44336; color: white; }
+.toast-info { background-color: #2196F3; color: white; }
+
+/* Toast close button styling */
+.toast-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0 5px;
+  margin-left: 15px;
+  transition: transform 0.2s ease;
+}
+
+.toast-close:hover {
+  transform: scale(1.2); /* Slight zoom effect on hover */
+}
+
+/* Toast message styling */
+.toast-message {
+  flex-grow: 1;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* Slide-in and slide-out animations */
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideOut {
+  from { transform: translateX(0); opacity: 1; }
+  to { transform: translateX(100%); opacity: 0; }
+}
+
+/* Optional: Adding animation to automatically remove the toast after duration */
+.toast-leaving {
+  animation: slideOut 0.5s ease-out forwards; /* Increased slide-out time */
+}
+
+/* Optional: Giving toasts a bit more time to be visible before removal */
+.toast-container .toast {
+  animation: slideIn 0.5s ease-out, slideOut 0.5s ease-out 14.5s forwards; /* Wait 4.5s before starting slideOut */
+}

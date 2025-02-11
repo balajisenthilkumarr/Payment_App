@@ -4,7 +4,7 @@ import {
   transactiondata
 } from "../services/paymentServices.js";
 import mongoose from "mongoose";
-import { io} from '../Server.js'; 
+import { io, client1 , client2 , targetClient, tempclient} from '../Server.js'; 
 
 
 export const createPaymentOrderController = async (req, res) => {
@@ -17,12 +17,7 @@ export const createPaymentOrderController = async (req, res) => {
 
   try {
 
-    io.on("connection", (socket) => {
-      socket.on("payment activated",(data)=>{
-       console.log("message from client",data);
-      });
-   
-     });
+    
 
     const order = await createPaymentOrder(amount, Receiverid,SenderId);
     console.log(order);
@@ -71,6 +66,17 @@ export const capturePaymentController = async (req, res) => {
   try {
     // Capture payment
     const capture = await capturePayment(payment_id, order_id, amount);
+    io.to(tempclient).emit("paymentCompleted", `Your Successful Payment : ₹ ${(amount/100)} `);
+    console.log(`Payment success message sent ${(amount/100)} to ${tempclient}`);
+
+    if (tempclient === client1 && client2) {
+      io.to(client2).emit("receiveMessage", `Amount received : ₹ ${(amount/100)}`);
+      console.log(`receive amount message sent to ${client2}`);
+    } else if ( tempclient=== client2 && client1) {
+      io.to(client1).emit("receiveMessage", `Amount received : ₹ ${(amount/100)}`);
+      console.log(`receive amount message sent to ${client1}`);
+    }
+
     res.status(200).json({ status: "Payment captured successfully", capture });
 
     // // **Emit real-time event to Receiver & Sender**

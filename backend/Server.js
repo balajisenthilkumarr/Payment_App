@@ -9,6 +9,12 @@ import router from './routes/payements.js';
 import authRoutes from './routes/logion.js';
 import connectDB from './config/db.js';
 
+
+export let client1 = null;
+export let client2 = null;
+export let targetClient = null;
+
+export let tempclient=null;
 // Load environment variables
 dotenv.config();
 
@@ -31,17 +37,53 @@ const io = new Server(server, {
   },
 });
 
-let client1 = null;
-let client2 = null
+// let client1 = null;
+// let client2 = null
 
 // Handle incoming socket connections
 io.on("connection", (socket) => {
   console.log("Socket connected with a client",socket.id);
+
+
+  if (!client1) {
+    client1 = socket.id;
+    console.log(`Client 1 assigned: ${client1}`);
+  } else if (!client2 && socket.id !== client1) {
+    client2 = socket.id;
+    console.log(`Client 2 assigned: ${client2}`);
+  }
+
+
+  // let targetClient = null;
+
+  // Determine the target client
+  targetClient = socket.id === client1 ? client2 : client1;
+
+       socket.on("payment activated",(data)=>{
+         console.log("message from client","hellooooo");
+  
+  
+          tempclient=socket.id;
+         socket.emit("payment initiated", "Payment Initiated");
+        });
+
+        socket.on("disconnect", () => {
+          console.log(`Client disconnected: ${socket.id}`);
+      
+          if (socket.id === client1) {
+            client1 = null;
+          } else if (socket.id === client2) {
+            client2 = null;
+          }
+      
+          targetClient = client1 || client2;
+        });
+
   //socket.on("sendMessage", (data)=>{
    // console.log("data from clinet",data);
-   socket.on("payment_activated", (data) => {
-    console.log("Message from client:", data);
-   });
+  //  socket.on("payment_activated", (data) => {
+  //   console.log("Message from client:", data);
+  //  });
 
    // Assign the first two clients
   
